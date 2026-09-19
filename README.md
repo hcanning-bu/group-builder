@@ -6,7 +6,7 @@ generating the CSV files Blackboard Ultra needs to import a Group Set.
 ## Usage
 
 1. Use `input-gradebook-names-export-500.csv` as a sample input, representing
-   students exported from Gradebook.
+   students exported from Blackboard Ultra Gradebook.
 2. Download and use `index.html` as your app to create the CSVs for Group
    Sets and Groups. It's a single self-contained file, so it runs entirely
    in your browser with no internet connection required — just double-click
