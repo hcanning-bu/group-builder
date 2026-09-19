@@ -479,6 +479,7 @@
             <select id="name-category">
               <option value="skeleton">Skeleton bones</option>
               <option value="sports">NFL &amp; NBA teams</option>
+              <option value="medical">Medical Term</option>
               <option value="anagram" selected>Fun Medical Term Anagram</option>
               <option value="elements">Chemical elements</option>
               <option value="numbered">Numbered</option>
@@ -832,6 +833,7 @@
       const CATEGORY_LABELS = {
         skeleton: "Skeleton bones",
         sports: "NFL & NBA teams",
+        medical: "Medical Term",
         anagram: "Fun Medical Term Anagram",
         elements: "Chemical elements",
         numbered: "Numbered",
@@ -1009,6 +1011,12 @@
               countLabel: String(ELEMENT_GROUP_NAMES.length),
               hint: `Uses chemical element names (up to ${ELEMENT_GROUP_NAMES.length}).`,
             };
+          case "medical":
+            return {
+              max: ANAGRAM_TERMS.length,
+              countLabel: String(ANAGRAM_TERMS.length),
+              hint: `Uses medical term names (up to ${ANAGRAM_TERMS.length}).`,
+            };
           case "anagram":
             return {
               max: ANAGRAM_TERMS.length,
@@ -1081,6 +1089,14 @@
           return ELEMENT_GROUP_NAMES.slice(0, groupCount).map((title, index) => ({
             code: toGroupCode(title, index + 1),
             title,
+            answer: null,
+          }));
+        }
+
+        if (category === "medical") {
+          return ANAGRAM_TERMS.slice(0, groupCount).map((term, index) => ({
+            code: toGroupCode(term.answer, index + 1),
+            title: term.answer,
             answer: null,
           }));
         }
