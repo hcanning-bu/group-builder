@@ -235,22 +235,16 @@
         cursor: not-allowed;
       }
 
-      #preview-btn,
-      #anagram-list-btn {
+      #preview-btn {
         background: #fff;
         color: var(--primary);
         border: 1px solid var(--primary);
       }
 
-      #preview-btn:hover:not(:disabled),
-      #anagram-list-btn:hover:not(:disabled) {
+      #preview-btn:hover:not(:disabled) {
         background: #fff5f5;
         border-color: var(--primary-dark);
         color: var(--primary-dark);
-      }
-
-      #anagram-list-btn.hidden {
-        display: none;
       }
 
       .preview {
@@ -270,7 +264,7 @@
 
       .group-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: 1fr;
         gap: 0.9rem;
         margin-top: 1rem;
       }
@@ -279,11 +273,36 @@
         border: 1px solid var(--line);
         border-left: 4px solid var(--primary);
         border-radius: 0;
-        padding: 0.85rem 0.95rem;
+        padding: 0.85rem 0.95rem 0.85rem 4.2rem;
         background: #fff;
       }
 
+      .group-card summary {
+        cursor: pointer;
+        list-style: none;
+        margin: -0.85rem -0.95rem -0.85rem -4.2rem;
+        padding: 0.85rem 0.95rem 0.85rem 4.2rem;
+      }
+
+      .group-card summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .group-card summary::before {
+        content: "▶";
+        display: inline-block;
+        margin-right: 0.5rem;
+        font-size: 0.7rem;
+        color: var(--primary);
+        transition: transform 0.15s ease;
+      }
+
+      .group-card[open] summary::before {
+        transform: rotate(90deg);
+      }
+
       .group-card h3 {
+        display: inline;
         margin: 0 0 0.35rem;
         font-size: 1rem;
         color: var(--primary);
@@ -291,7 +310,7 @@
       }
 
       .group-card .meta {
-        margin: 0 0 0.65rem;
+        margin: 0.35rem 0 0.65rem;
         color: var(--ink);
         font-size: 0.88rem;
       }
@@ -306,52 +325,74 @@
         color: var(--primary);
       }
 
+      #preview-category .category-label {
+        font-weight: 700;
+        color: #000;
+      }
+
       .group-card ol {
-        margin: 0;
+        margin: 0.65rem 0 0;
         padding-left: 1.1rem;
         display: grid;
-        gap: 0.25rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.25rem 1rem;
       }
 
       .group-card li {
         font-size: 0.9rem;
       }
 
+      .group-card li::marker {
+        color: var(--primary);
+        font-weight: 400;
+      }
+
       .download-links {
-        margin: 0.85rem 0 0.25rem;
+        margin: 1rem 0 0.25rem;
+        padding: 0.9rem 1rem;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fafafa;
       }
 
       .download-links.hidden {
         display: none;
       }
 
-      .download-links a {
+      .download-links h3 {
+        margin: 0 0 0.6rem;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .download-links-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.55rem;
+      }
+
+      .download-links-list a {
         display: inline-flex;
         align-items: center;
-        border-radius: 6px;
-        padding: 0.65rem 1.1rem;
-        background: var(--primary);
-        color: var(--accent-ink);
-        text-decoration: none;
-        font-weight: 700;
-        border: 1px solid var(--primary);
-      }
-
-      .download-links a:hover {
-        background: var(--primary-dark);
-        border-color: var(--primary-dark);
-      }
-
-      .download-links a.secondary {
-        background: #fff;
+        gap: 0.5rem;
         color: var(--primary);
-        border: 1px solid var(--primary);
+        text-decoration: none;
+        font-weight: 400;
+        font-size: 0.95rem;
       }
 
-      .download-links a.secondary:hover {
-        background: #fff5f5;
-        border-color: var(--primary-dark);
+      .download-links-list a:hover {
         color: var(--primary-dark);
+        text-decoration: underline;
+      }
+
+      .download-links-list svg {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
       }
     </style>
   </head>
@@ -459,19 +500,20 @@
 
         <div class="actions">
           <button type="submit" id="submit-btn" disabled>
-            Generate both CSVs
+            Generate CSVs
           </button>
           <button type="button" id="preview-btn" disabled>Preview only</button>
-          <button type="button" id="anagram-list-btn" class="hidden">
-            Download anagram list CSV
-          </button>
         </div>
       </form>
 
       <section id="preview" class="panel preview hidden" aria-live="polite">
         <h2>Preview</h2>
         <p id="preview-summary" class="status"></p>
-        <div id="download-links" class="actions download-links hidden"></div>
+        <div id="download-links" class="download-links hidden">
+          <h3>Downloads</h3>
+          <ul id="download-links-list" class="download-links-list"></ul>
+        </div>
+        <p id="preview-category" class="status"></p>
         <div id="preview-groups" class="group-grid"></div>
       </section>
     </main>
@@ -782,11 +824,12 @@
       const groupCountInput = document.getElementById("group-count");
       const submitBtn = document.getElementById("submit-btn");
       const previewBtn = document.getElementById("preview-btn");
-      const anagramListBtn = document.getElementById("anagram-list-btn");
       const previewSection = document.getElementById("preview");
       const previewSummary = document.getElementById("preview-summary");
+      const previewCategory = document.getElementById("preview-category");
       const previewGroups = document.getElementById("preview-groups");
       const downloadLinks = document.getElementById("download-links");
+      const downloadLinksList = document.getElementById("download-links-list");
 
       let students = [];
       let objectUrls = [];
@@ -798,11 +841,6 @@
         updateCategoryLimits();
         clearFieldInvalid(nameCategory);
         clearFormError();
-      });
-
-      anagramListBtn.addEventListener("click", async () => {
-        const csv = buildAnagramListCsv();
-        await downloadText("medical-term-anagrams.csv", csv);
       });
 
       groupSetNameInput.addEventListener("blur", () => {
@@ -860,7 +898,7 @@
         }
       });
 
-      form.addEventListener("submit", async (event) => {
+      form.addEventListener("submit", (event) => {
         event.preventDefault();
         const assignment = buildAssignment();
         if (!assignment) return;
@@ -868,24 +906,26 @@
         const groupsCsv = buildGroupsCsv(assignment);
         const membersCsv = buildGroupMembersCsv(assignment);
 
-        renderPreview(assignment);
-        showDownloadLinks([
+        const files = [
           { filename: "group-set-config.csv", contents: groupsCsv },
           { filename: "student-assignment.csv", contents: membersCsv },
-        ]);
+        ];
+        if (assignment.category === "anagram") {
+          files.push({
+            filename: "medical-term-anagrams.csv",
+            contents: buildAnagramListCsv(),
+          });
+        }
 
-        // Browsers often block a second download in the same click;
-        // stagger so both files save.
-        await downloadText("group-set-config.csv", groupsCsv);
-        await wait(400);
-        await downloadText("student-assignment.csv", membersCsv);
+        renderPreview(assignment);
+        showDownloadLinks(files);
       });
 
       previewBtn.addEventListener("click", () => {
         const assignment = buildAssignment();
         if (!assignment) return;
         downloadLinks.classList.add("hidden");
-        downloadLinks.innerHTML = "";
+        downloadLinksList.innerHTML = "";
         revokeObjectUrls();
         renderPreview(assignment);
       });
@@ -975,10 +1015,6 @@
         const meta = getCategoryMeta(nameCategory.value);
         groupCountInput.max = String(meta.max);
         categoryHint.textContent = meta.hint;
-        anagramListBtn.classList.toggle(
-          "hidden",
-          nameCategory.value !== "anagram"
-        );
 
         const current = Number(groupCountInput.value);
         if (Number.isFinite(current) && current > meta.max) {
@@ -1382,11 +1418,22 @@
             ? "random order"
             : "A–Z by last name";
         previewSummary.textContent = `${assignment.studentCount} students → ${assignment.groups.length} groups (${orderLabel}) in set “${assignment.groupSetName}”.`;
+        previewCategory.innerHTML = "";
+        const categoryLabel = document.createElement("span");
+        categoryLabel.className = "category-label";
+        categoryLabel.textContent = "Category:";
+        previewCategory.append(
+          categoryLabel,
+          ` ${CATEGORY_LABELS[assignment.category] || assignment.category}`
+        );
 
         previewGroups.innerHTML = "";
-        for (const group of assignment.groups) {
-          const card = document.createElement("article");
+        assignment.groups.forEach((group, groupIndex) => {
+          const card = document.createElement("details");
           card.className = "group-card";
+          card.open = groupIndex === 0;
+
+          const summary = document.createElement("summary");
 
           const title = document.createElement("h3");
           title.textContent = group.title;
@@ -1404,6 +1451,8 @@
             meta.append(" · ", anagramLabel, ` ${group.answer}`);
           }
 
+          summary.append(title, meta);
+
           const list = document.createElement("ol");
           for (const member of group.members) {
             const item = document.createElement("li");
@@ -1412,13 +1461,9 @@
             list.appendChild(item);
           }
 
-          card.append(title, meta, list);
+          card.append(summary, list);
           previewGroups.appendChild(card);
-        }
-      }
-
-      function wait(ms) {
-        return new Promise((resolve) => setTimeout(resolve, ms));
+        });
       }
 
       function revokeObjectUrls() {
@@ -1435,32 +1480,28 @@
         return url;
       }
 
+      const DOWNLOAD_ICON_SVG =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+
       function showDownloadLinks(files) {
         revokeObjectUrls();
-        downloadLinks.innerHTML = "";
+        downloadLinksList.innerHTML = "";
         downloadLinks.classList.remove("hidden");
 
-        files.forEach((file, index) => {
+        files.forEach((file) => {
+          const item = document.createElement("li");
           const link = document.createElement("a");
           link.href = createObjectUrl(file.contents);
           link.download = file.filename;
-          link.textContent = `Download ${file.filename}`;
-          if (index > 0) link.className = "secondary";
-          downloadLinks.appendChild(link);
+          link.innerHTML = DOWNLOAD_ICON_SVG;
+          const label = document.createElement("span");
+          label.textContent = file.filename;
+          link.appendChild(label);
+          item.appendChild(link);
+          downloadLinksList.appendChild(item);
         });
       }
 
-      async function downloadText(filename, contents) {
-        const url = createObjectUrl(contents);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.style.display = "none";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        await wait(50);
-      }
     </script>
   </body>
 </html>
