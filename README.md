@@ -1,4 +1,4 @@
-# Blackboard Ultra Group Builder
+# HCANN | Blackboard Ultra Group Builder
 
 A single-file web app for splitting a class roster into named groups and
 generating the CSV files Blackboard Ultra needs to import a Group Set.
