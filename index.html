@@ -187,6 +187,28 @@
         color: #1a7f37;
       }
 
+      .fix-btn {
+        justify-self: start;
+        margin: -0.4rem 0 0.9rem;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        background: #fff;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        border-radius: 6px;
+      }
+
+      .fix-btn:hover:not(:disabled) {
+        background: #fff5f5;
+        border-color: var(--primary-dark);
+        color: var(--primary-dark);
+      }
+
+      .fix-btn.hidden {
+        display: none;
+      }
+
       .actions {
         display: flex;
         flex-wrap: wrap;
@@ -381,6 +403,7 @@
             Use underscores between words (e.g. <code>Group_Set_1</code>,
             <code>group1_set</code>). No spaces.
           </p>
+          <button type="button" id="group-set-fix-btn" class="fix-btn hidden"></button>
 
           <label>
             <span>Group name category</span>
@@ -753,6 +776,7 @@
       const rosterStatus = document.getElementById("roster-status");
       const formError = document.getElementById("form-error");
       const groupSetNameInput = document.getElementById("group-set-name");
+      const groupSetFixBtn = document.getElementById("group-set-fix-btn");
       const nameCategory = document.getElementById("name-category");
       const categoryHint = document.getElementById("category-hint");
       const groupCountInput = document.getElementById("group-count");
@@ -782,23 +806,23 @@
       });
 
       groupSetNameInput.addEventListener("blur", () => {
-        const normalized = normalizeGroupSetName(groupSetNameInput.value);
-        if (normalized !== groupSetNameInput.value) {
-          groupSetNameInput.value = normalized;
-        }
-        const ok = reportGroupSetNameValidity(normalized);
-        groupSetNameInput.classList.toggle("invalid", !ok && Boolean(normalized));
-        if (!ok && normalized) {
-          showFormError(GROUP_SET_NAME_ERROR);
-        } else if (ok) {
-          clearFormError();
-        }
+        validateGroupSetNameField();
       });
 
       groupSetNameInput.addEventListener("input", () => {
         groupSetNameInput.setCustomValidity("");
         clearFieldInvalid(groupSetNameInput);
         clearFormError();
+        hideGroupSetNameFix();
+      });
+
+      groupSetFixBtn.addEventListener("click", () => {
+        const suggestion = groupSetFixBtn.dataset.suggestion;
+        if (!suggestion) return;
+        groupSetNameInput.value = suggestion;
+        hideGroupSetNameFix();
+        validateGroupSetNameField();
+        groupSetNameInput.focus();
       });
 
       groupCountInput.addEventListener("input", () => {
@@ -1023,7 +1047,9 @@
         }));
       }
 
-      function normalizeGroupSetName(value) {
+      // Only used to propose a fix in the UI; the field itself is never
+      // changed unless the user clicks "Use suggested name" to approve it.
+      function suggestGroupSetName(value) {
         return String(value ?? "")
           .trim()
           .replace(/[\s\-]+/g, "_")
@@ -1048,6 +1074,37 @@
         return true;
       }
 
+      function validateGroupSetNameField() {
+        const value = groupSetNameInput.value;
+        const ok = reportGroupSetNameValidity(value);
+        groupSetNameInput.classList.toggle("invalid", !ok && Boolean(value));
+        if (!ok && value) {
+          showFormError(GROUP_SET_NAME_ERROR);
+          offerGroupSetNameFix(value);
+        } else {
+          clearFormError();
+          hideGroupSetNameFix();
+        }
+        return ok;
+      }
+
+      function offerGroupSetNameFix(value) {
+        const suggestion = suggestGroupSetName(value);
+        if (suggestion && suggestion !== value && isValidGroupSetName(suggestion)) {
+          groupSetFixBtn.textContent = `Use suggested name: ${suggestion}`;
+          groupSetFixBtn.dataset.suggestion = suggestion;
+          groupSetFixBtn.classList.remove("hidden");
+        } else {
+          hideGroupSetNameFix();
+        }
+      }
+
+      function hideGroupSetNameFix() {
+        groupSetFixBtn.classList.add("hidden");
+        groupSetFixBtn.textContent = "";
+        delete groupSetFixBtn.dataset.suggestion;
+      }
+
       function buildAssignment() {
         clearFormError();
         clearAllFieldInvalid();
@@ -1063,8 +1120,7 @@
         const category = nameCategory.value;
         const meta = getCategoryMeta(category);
         const groupCount = Number(document.getElementById("group-count").value);
-        const groupSetName = normalizeGroupSetName(groupSetNameInput.value);
-        groupSetNameInput.value = groupSetName;
+        const groupSetName = groupSetNameInput.value;
         const sortMode = document.getElementById("sort-mode").value;
         const selfEnroll = document.getElementById("self-enroll").value;
         const description = document
@@ -1087,10 +1143,12 @@
           groupSetNameInput.reportValidity();
           setStatus(GROUP_SET_NAME_ERROR, true);
           showFormError(GROUP_SET_NAME_ERROR);
+          offerGroupSetNameFix(groupSetName);
           return null;
         }
 
         reportGroupSetNameValidity(groupSetName);
+        hideGroupSetNameFix();
 
         if (!Number.isInteger(groupCount) || groupCount < 1) {
           const message = "Number of groups must be at least 1.";
