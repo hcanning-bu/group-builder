@@ -3,7 +3,7 @@
 A single-file web app for splitting a class roster into named groups and
 generating the CSV files Blackboard Ultra needs to import a Group Set.
 
-**Demo:** [hcanning-bu.github.io/group-builder](https://hcanning-bu.github.io/group-builder/)
+**Demo:** <a href="https://hcanning-bu.github.io/group-builder/" target="_blank" rel="noopener noreferrer">hcanning-bu.github.io/group-builder</a>
 
 ## Usage
 
