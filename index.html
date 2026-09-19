@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blackboard Ultra Group Builder</title>
+    <style>
+      :root {
+        --primary: #cc0000;
+        --primary-dark: #a00000;
+        --bg: #f5f5f5;
+        --panel: #fff;
+        --ink: #333;
+        --muted: #666;
+        --line: #e0e0e0;
+        --accent: var(--primary);
+        --accent-ink: #fff;
+        --danger: var(--primary);
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        --radius: 8px;
+        --font: Arial, Helvetica, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.45;
+      }
+
+      .app {
+        width: min(960px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 1.5rem 0 2.5rem;
+      }
+
+      .header {
+        margin-bottom: 1rem;
+        padding-bottom: 0.85rem;
+        border-bottom: 3px solid var(--primary);
+      }
+
+      .header h1 {
+        margin: 0 0 0.4rem;
+        font-size: clamp(1.15rem, 2.5vw, 1.5rem);
+        font-weight: 700;
+        color: var(--primary);
+        letter-spacing: 0.02em;
+      }
+
+      .header p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 42rem;
+        font-size: 0.95rem;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1.25rem 1.35rem;
+      }
+
+      fieldset {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        margin: 0 0 1rem;
+        padding: 1rem;
+      }
+
+      legend {
+        padding: 0 0.4rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      label {
+        display: grid;
+        gap: 0.35rem;
+        margin-bottom: 0.9rem;
+        font-size: 0.95rem;
+      }
+
+      label span {
+        color: var(--muted);
+      }
+
+      input,
+      select,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      input:focus,
+      select:focus,
+      button:focus-visible {
+        outline: 2px solid rgba(204, 0, 0, 0.25);
+        outline-offset: 2px;
+        border-color: var(--primary);
+      }
+
+      .file-label input {
+        padding: 0.45rem;
+      }
+
+      .status {
+        margin: 0.2rem 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .status.error {
+        margin: 0.55rem 0 0;
+        padding: 0.65rem 0.8rem;
+        color: var(--primary);
+        background: #fff5f5;
+        border: 1px solid color-mix(in srgb, var(--primary) 40%, white);
+        border-radius: 6px;
+        font-size: 0.98rem;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+
+      #form-error {
+        display: none;
+        margin: 0 0 1rem;
+        padding: 0.75rem 0.9rem;
+        color: var(--primary);
+        background: #fff5f5;
+        border: 2px solid var(--primary);
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+
+      #form-error.visible {
+        display: block;
+      }
+
+      input.invalid,
+      select.invalid {
+        border-color: var(--primary);
+        background: #fff5f5;
+        box-shadow: 0 0 0 2px rgba(204, 0, 0, 0.2);
+      }
+
+      .hint {
+        margin: -0.35rem 0 0.9rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+
+      #group-set-hint {
+        margin: -0.2rem 0 1rem;
+        padding: 0;
+        color: #1a7f37;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        font-size: 0.9rem;
+        font-weight: 400;
+        line-height: 1.4;
+      }
+
+      #group-set-hint code {
+        font-weight: 400;
+        color: #1a7f37;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      button {
+        border: 1px solid var(--primary);
+        border-radius: 6px;
+        padding: 0.7rem 1.2rem;
+        cursor: pointer;
+        background: var(--primary);
+        color: var(--accent-ink);
+        font-weight: 700;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      #preview-btn,
+      #anagram-list-btn {
+        background: #fff;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+      }
+
+      #preview-btn:hover:not(:disabled),
+      #anagram-list-btn:hover:not(:disabled) {
+        background: #fff5f5;
+        border-color: var(--primary-dark);
+        color: var(--primary-dark);
+      }
+
+      #anagram-list-btn.hidden {
+        display: none;
+      }
+
+      .preview {
+        margin-top: 1.25rem;
+      }
+
+      .preview.hidden {
+        display: none;
+      }
+
+      .preview h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1.15rem;
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      .group-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.9rem;
+        margin-top: 1rem;
+      }
+
+      .group-card {
+        border: 1px solid var(--line);
+        border-left: 4px solid var(--primary);
+        border-radius: 0;
+        padding: 0.85rem 0.95rem;
+        background: #fff;
+      }
+
+      .group-card h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1rem;
+        color: var(--primary);
+        font-weight: 700;
+      }
+
+      .group-card .meta {
+        margin: 0 0 0.65rem;
+        color: var(--ink);
+        font-size: 0.88rem;
+      }
+
+      .group-card .meta .meta-label-members {
+        font-weight: 700;
+        color: #000;
+      }
+
+      .group-card .meta .meta-label-anagram {
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .group-card ol {
+        margin: 0;
+        padding-left: 1.1rem;
+        display: grid;
+        gap: 0.25rem;
+      }
+
+      .group-card li {
+        font-size: 0.9rem;
+      }
+
+      .download-links {
+        margin: 0.85rem 0 0.25rem;
+      }
+
+      .download-links.hidden {
+        display: none;
+      }
+
+      .download-links a {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 6px;
+        padding: 0.65rem 1.1rem;
+        background: var(--primary);
+        color: var(--accent-ink);
+        text-decoration: none;
+        font-weight: 700;
+        border: 1px solid var(--primary);
+      }
+
+      .download-links a:hover {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+      }
+
+      .download-links a.secondary {
+        background: #fff;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+      }
+
+      .download-links a.secondary:hover {
+        background: #fff5f5;
+        border-color: var(--primary-dark);
+        color: var(--primary-dark);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>Blackboard Ultra Group Builder</h1>
+        <p>
+          Upload a gradebook CSV, split students into named groups from a naming
+          category you choose, and download Blackboard Ultra Group Set import
+          files.
+        </p>
+      </header>
+
+      <form id="group-form" class="panel" novalidate>
+        <fieldset>
+          <legend>1. Student roster</legend>
+          <label class="file-label">
+            <span>Gradebook CSV</span>
+            <input
+              id="csv-file"
+              type="file"
+              accept=".csv,text/csv"
+              required
+            />
+          </label>
+          <p id="roster-status" class="status" aria-live="polite">
+            No file loaded.
+          </p>
+        </fieldset>
+
+        <fieldset>
+          <legend>2. Group settings</legend>
+
+          <label>
+            <span>Group set name</span>
+            <input
+              id="group-set-name"
+              type="text"
+              value="Group_Set_1"
+              required
+              pattern="[A-Za-z0-9]+(_[A-Za-z0-9]+)+"
+              title="Use underscores between words (e.g. Group_Set_1 or group1_set). Letters, numbers, and underscores only; no spaces."
+              spellcheck="false"
+              autocomplete="off"
+            />
+          </label>
+          <p id="group-set-hint" class="hint">
+            Use underscores between words (e.g. <code>Group_Set_1</code>,
+            <code>group1_set</code>). No spaces.
+          </p>
+
+          <label>
+            <span>Group name category</span>
+            <select id="name-category">
+              <option value="skeleton">Skeleton bones</option>
+              <option value="sports">NFL &amp; NBA teams</option>
+              <option value="anagram" selected>Fun Medical Term Anagram</option>
+              <option value="elements">Chemical elements</option>
+              <option value="numbered">Numbered</option>
+            </select>
+          </label>
+          <p id="category-hint" class="hint" aria-live="polite"></p>
+
+          <label>
+            <span>Number of groups</span>
+            <input
+              id="group-count"
+              type="number"
+              min="1"
+              max="40"
+              value="4"
+              required
+            />
+          </label>
+
+          <label>
+            <span>Student order</span>
+            <select id="sort-mode">
+              <option value="az">A–Z by last name</option>
+              <option value="random">Random</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Self enroll</span>
+            <select id="self-enroll">
+              <option value="N" selected>No (instructor assigned)</option>
+              <option value="Y">Yes</option>
+            </select>
+          </label>
+
+          <label>
+            <span>Group description (optional)</span>
+            <input
+              id="group-description"
+              type="text"
+              placeholder="Assigned study group"
+            />
+          </label>
+        </fieldset>
+
+        <p id="form-error" role="alert" aria-live="assertive"></p>
+
+        <div class="actions">
+          <button type="submit" id="submit-btn" disabled>
+            Generate both CSVs
+          </button>
+          <button type="button" id="preview-btn" disabled>Preview only</button>
+          <button type="button" id="anagram-list-btn" class="hidden">
+            Download anagram list CSV
+          </button>
+        </div>
+      </form>
+
+      <section id="preview" class="panel preview hidden" aria-live="polite">
+        <h2>Preview</h2>
+        <p id="preview-summary" class="status"></p>
+        <div id="download-links" class="actions download-links hidden"></div>
+        <div id="preview-groups" class="group-grid"></div>
+      </section>
+    </main>
+
+    <script>
+      const SKELETON_GROUP_NAMES = [
+        "Femur",
+        "Patella",
+        "Tibia",
+        "Fibula",
+        "Humerus",
+        "Radius",
+        "Ulna",
+        "Scapula",
+        "Clavicle",
+        "Sternum",
+        "Pelvis",
+        "Ilium",
+        "Ischium",
+        "Pubis",
+        "Sacrum",
+        "Coccyx",
+        "Atlas",
+        "Axis",
+        "Calcaneus",
+        "Talus",
+        "Navicular",
+        "Cuboid",
+        "Metacarpal",
+        "Metatarsal",
+        "Phalanx",
+        "Carpus",
+        "Tarsus",
+        "Mandible",
+        "Maxilla",
+        "Zygoma",
+        "Occipital",
+        "Temporal",
+        "Parietal",
+        "Frontal",
+        "Ethmoid",
+        "Sphenoid",
+        "Hyoid",
+        "Rib",
+        "Vertebra",
+        "Acetabulum",
+      ];
+
+      const SPORTS_GROUP_NAMES = [
+        "Patriots",
+        "Bills",
+        "Dolphins",
+        "Jets",
+        "Ravens",
+        "Bengals",
+        "Browns",
+        "Steelers",
+        "Texans",
+        "Colts",
+        "Jaguars",
+        "Titans",
+        "Broncos",
+        "Chiefs",
+        "Raiders",
+        "Chargers",
+        "Cowboys",
+        "Giants",
+        "Eagles",
+        "Commanders",
+        "Bears",
+        "Lions",
+        "Packers",
+        "Vikings",
+        "Falcons",
+        "Panthers",
+        "Saints",
+        "Buccaneers",
+        "Cardinals",
+        "Rams",
+        "Niners",
+        "Seahawks",
+        "Celtics",
+        "Nets",
+        "Knicks",
+        "Sixers",
+        "Raptors",
+        "Bulls",
+        "Cavaliers",
+        "Pistons",
+        "Pacers",
+        "Bucks",
+        "Hawks",
+        "Hornets",
+        "Heat",
+        "Magic",
+        "Wizards",
+        "Nuggets",
+        "Timberwolves",
+        "Thunder",
+        "Blazers",
+        "Jazz",
+        "Warriors",
+        "Clippers",
+        "Lakers",
+        "Suns",
+        "Kings",
+        "Mavericks",
+        "Rockets",
+        "Grizzlies",
+        "Pelicans",
+        "Spurs",
+      ];
+
+      const ELEMENT_GROUP_NAMES = [
+        "Hydrogen",
+        "Helium",
+        "Lithium",
+        "Beryllium",
+        "Boron",
+        "Carbon",
+        "Nitrogen",
+        "Oxygen",
+        "Fluorine",
+        "Neon",
+        "Sodium",
+        "Magnesium",
+        "Aluminum",
+        "Silicon",
+        "Phosphorus",
+        "Sulfur",
+        "Chlorine",
+        "Argon",
+        "Potassium",
+        "Calcium",
+        "Scandium",
+        "Titanium",
+        "Vanadium",
+        "Chromium",
+        "Manganese",
+        "Iron",
+        "Cobalt",
+        "Nickel",
+        "Copper",
+        "Zinc",
+        "Gallium",
+        "Germanium",
+        "Arsenic",
+        "Selenium",
+        "Bromine",
+        "Krypton",
+        "Rubidium",
+        "Strontium",
+        "Yttrium",
+        "Zirconium",
+        "Niobium",
+        "Molybdenum",
+        "Technetium",
+        "Ruthenium",
+        "Rhodium",
+        "Palladium",
+        "Silver",
+        "Cadmium",
+        "Indium",
+        "Tin",
+        "Antimony",
+        "Tellurium",
+        "Iodine",
+        "Xenon",
+        "Cesium",
+        "Barium",
+        "Lanthanum",
+        "Cerium",
+        "Platinum",
+        "Gold",
+        "Mercury",
+        "Lead",
+        "Bismuth",
+        "Radon",
+        "Uranium",
+        "Plutonium",
+      ];
+
+      const ANAGRAM_TERMS = [
+        { anagram: "aelatpl", answer: "Patella" },
+        { anagram: "ushmrue", answer: "Humerus" },
+        { anagram: "aaclusp", answer: "Scapula" },
+        { anagram: "icalvecl", answer: "Clavicle" },
+        { anagram: "rsmtune", answer: "Sternum" },
+        { anagram: "anliemdb", answer: "Mandible" },
+        { anagram: "illmaxa", answer: "Maxilla" },
+        { anagram: "ytgioczma", answer: "Zygomatic" },
+        { anagram: "ronatlf", answer: "Frontal" },
+        { anagram: "lareatip", answer: "Parietal" },
+        { anagram: "merptola", answer: "Temporal" },
+        { anagram: "cialpitoc", answer: "Occipital" },
+        { anagram: "hmedito", answer: "Ethmoid" },
+        { anagram: "dhnpoies", answer: "Sphenoid" },
+        { anagram: "cimlraal", answer: "Lacrimal" },
+        { anagram: "neitaalp", answer: "Palatine" },
+        { anagram: "eevrtbra", answer: "Vertebra" },
+        { anagram: "ceamtlapra", answer: "Metacarpal" },
+        { anagram: "axlhnap", answer: "Phalanx" },
+        { anagram: "raltsaemta", answer: "Metatarsal" },
+        { anagram: "neacsulca", answer: "Calcaneus" },
+        { anagram: "cvraianal", answer: "Navicular" },
+        { anagram: "dichapos", answer: "Scaphoid" },
+        { anagram: "rtiqeruum", answer: "Triquetrum" },
+        { anagram: "ipmisrof", answer: "Pisiform" },
+        { anagram: "zuimpert", answer: "Trapezium" },
+        { anagram: "rzeopaitd", answer: "Trapezoid" },
+        { anagram: "tcaiapte", answer: "Capitate" },
+        { anagram: "sluamel", answer: "Malleus" },
+        { anagram: "lacsrtiage", answer: "Cartilage" },
+        { anagram: "nmetagil", answer: "Ligament" },
+        { anagram: "secusml", answer: "Muscles" },
+        { anagram: "mfeomral", answer: "Femoral" },
+        { anagram: "aelruhm", answer: "Humeral" },
+        { anagram: "ealrtlap", answer: "Patellar" },
+        { anagram: "racpasul", answer: "Scapular" },
+        { anagram: "aaricclv", answer: "Clavicular" },
+        { anagram: "lersnat", answer: "Mandibular" },
+        { anagram: "dmixalray", answer: "Maxillary" },
+        { anagram: "lrateebvr", answer: "Vertebral" },
+        { anagram: "setthocpoe", answer: "Stethoscope" },
+        { anagram: "etocposoe", answer: "Otoscope" },
+        { anagram: "mpceusle", answer: "Speculum" },
+        { anagram: "cthreaet", answer: "Catheter" },
+        { anagram: "syerngi", answer: "Syringe" },
+        { anagram: "plecals", answer: "Scalpel" },
+        { anagram: "recfops", answer: "Forceps" },
+        { anagram: "tacretror", answer: "Retractor" },
+        { anagram: "mroeemhter", answer: "Thermometer" },
+        { anagram: "tsraulound", answer: "Ultrasound" },
+        { anagram: "yagilorod", answer: "Radiology" },
+        { anagram: "oysendp", answer: "Endoscopy" },
+        { anagram: "haseetsain", answer: "Anesthesia" },
+        { anagram: "otvacaincin", answer: "Vaccination" },
+        { anagram: "nutiofsran", answer: "Transfusion" },
+        { anagram: "sindosagi", answer: "Diagnosis" },
+        { anagram: "toamyn", answer: "Anatomy" },
+        { anagram: "pyolhsyiog", answer: "Physiology" },
+        { anagram: "ogluenry", answer: "Neurology" },
+        { anagram: "daircloog", answer: "Cardiology" },
+        { anagram: "apahmrcy", answer: "Pharmacy" },
+        { anagram: "inilcal", answer: "Clinical" },
+        { anagram: "tneipat", answer: "Patient" },
+        { anagram: "mdeiacl", answer: "Medical" },
+        { anagram: "tmnreatet", answer: "Treatment" },
+        { anagram: "ibioaintct", answer: "Antibiotic" },
+        { anagram: "gaesilanc", answer: "Analgesic" },
+        { anagram: "sdaeitve", answer: "Sedative" },
+        { anagram: "caevnic", answer: "Vaccine" },
+        { anagram: "thosapil", answer: "Hospital" },
+        { anagram: "mifetronm", answer: "Metformin" },
+        { anagram: "pnuobire", answer: "Ibuprofen" },
+        { anagram: "isaprin", answer: "Aspirin" },
+        { anagram: "xilmoicilna", answer: "Amoxicillin" },
+        { anagram: "pneahir", answer: "Heparin" },
+        { anagram: "aildcioen", answer: "Lidocaine" },
+        { anagram: "niphreiepe", answer: "Epinephrine" },
+        { anagram: "pdnorsnie", answer: "Prednisone" },
+        { anagram: "nsilinu", answer: "Insulin" },
+        { anagram: "eetamnophic", answer: "Acetaminophen" },
+        { anagram: "gulcose", answer: "Glucose" },
+        { anagram: "tpioren", answer: "Protein" },
+        { anagram: "mvniati", answer: "Vitamin" },
+        { anagram: "lmriaens", answer: "Minerals" },
+        { anagram: "hormneos", answer: "Hormones" },
+        { anagram: "yoeagoxnit", answer: "Oxygenation" },
+        { anagram: "ciraultoin", answer: "Circulation" },
+        { anagram: "rtrpioesary", answer: "Respiratory" },
+        { anagram: "eivgstide", answer: "Digestive" },
+        { anagram: "yraurni", answer: "Urinary" },
+        { anagram: "lkaelets", answer: "Skeletal" },
+        { anagram: "uslcraum", answer: "Muscular" },
+        { anagram: "snuores", answer: "Nervous" },
+        { anagram: "ndceroine", answer: "Endocrine" },
+        { anagram: "rtiareal", answer: "Arterial" },
+        { anagram: "acpialryl", answer: "Capillary" },
+        { anagram: "tbehaerat", answer: "Heartbeat" },
+        { anagram: "lnaorenu", answer: "Neuronal" },
+        { anagram: "mlhoraon", answer: "Hormonal" },
+        { anagram: "ylhpmacti", answer: "Lymphatic" },
+      ];
+
+      const MAX_NUMBERED_GROUPS = 999;
+
+      const CATEGORY_LABELS = {
+        skeleton: "Skeleton bones",
+        sports: "NFL & NBA teams",
+        anagram: "Fun Medical Term Anagram",
+        elements: "Chemical elements",
+        numbered: "Numbered",
+      };
+
+      const GROUP_SET_NAME_PATTERN = /^[A-Za-z0-9]+(_[A-Za-z0-9]+)+$/;
+      const GROUP_SET_NAME_ERROR =
+        "Group set name must use underscores between words (e.g. Group_Set_1 or group1_set). Letters, numbers, and underscores only; no spaces.";
+
+      const form = document.getElementById("group-form");
+      const fileInput = document.getElementById("csv-file");
+      const rosterStatus = document.getElementById("roster-status");
+      const formError = document.getElementById("form-error");
+      const groupSetNameInput = document.getElementById("group-set-name");
+      const nameCategory = document.getElementById("name-category");
+      const categoryHint = document.getElementById("category-hint");
+      const groupCountInput = document.getElementById("group-count");
+      const submitBtn = document.getElementById("submit-btn");
+      const previewBtn = document.getElementById("preview-btn");
+      const anagramListBtn = document.getElementById("anagram-list-btn");
+      const previewSection = document.getElementById("preview");
+      const previewSummary = document.getElementById("preview-summary");
+      const previewGroups = document.getElementById("preview-groups");
+      const downloadLinks = document.getElementById("download-links");
+
+      let students = [];
+      let objectUrls = [];
+
+      updateCategoryOptionLabels();
+      updateCategoryLimits();
+
+      nameCategory.addEventListener("change", () => {
+        updateCategoryLimits();
+        clearFieldInvalid(nameCategory);
+        clearFormError();
+      });
+
+      anagramListBtn.addEventListener("click", async () => {
+        const csv = buildAnagramListCsv();
+        await downloadText("medical-term-anagrams.csv", csv);
+      });
+
+      groupSetNameInput.addEventListener("blur", () => {
+        const normalized = normalizeGroupSetName(groupSetNameInput.value);
+        if (normalized !== groupSetNameInput.value) {
+          groupSetNameInput.value = normalized;
+        }
+        const ok = reportGroupSetNameValidity(normalized);
+        groupSetNameInput.classList.toggle("invalid", !ok && Boolean(normalized));
+        if (!ok && normalized) {
+          showFormError(GROUP_SET_NAME_ERROR);
+        } else if (ok) {
+          clearFormError();
+        }
+      });
+
+      groupSetNameInput.addEventListener("input", () => {
+        groupSetNameInput.setCustomValidity("");
+        clearFieldInvalid(groupSetNameInput);
+        clearFormError();
+      });
+
+      groupCountInput.addEventListener("input", () => {
+        clearFieldInvalid(groupCountInput);
+        clearFormError();
+      });
+
+      fileInput.addEventListener("change", async () => {
+        clearFieldInvalid(fileInput);
+        clearFormError();
+        const file = fileInput.files?.[0];
+        if (!file) {
+          students = [];
+          setStatus("No file loaded.");
+          setReady(false);
+          return;
+        }
+
+        try {
+          const text = await file.text();
+          students = parseGradebookCsv(text);
+          if (students.length === 0) {
+            throw new Error("No students found in that CSV.");
+          }
+          setStatus(
+            `Loaded ${students.length} student${students.length === 1 ? "" : "s"} from ${file.name}.`
+          );
+          setReady(true);
+        } catch (error) {
+          students = [];
+          markFieldInvalid(fileInput);
+          setStatus(error.message || "Could not read that CSV.", true);
+          showFormError(error.message || "Could not read that CSV.");
+          setReady(false);
+        }
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const assignment = buildAssignment();
+        if (!assignment) return;
+
+        const groupsCsv = buildGroupsCsv(assignment);
+        const membersCsv = buildGroupMembersCsv(assignment);
+
+        renderPreview(assignment);
+        showDownloadLinks([
+          { filename: "group-set-config.csv", contents: groupsCsv },
+          { filename: "student-assignment.csv", contents: membersCsv },
+        ]);
+
+        // Browsers often block a second download in the same click;
+        // stagger so both files save.
+        await downloadText("group-set-config.csv", groupsCsv);
+        await wait(400);
+        await downloadText("student-assignment.csv", membersCsv);
+      });
+
+      previewBtn.addEventListener("click", () => {
+        const assignment = buildAssignment();
+        if (!assignment) return;
+        downloadLinks.classList.add("hidden");
+        downloadLinks.innerHTML = "";
+        revokeObjectUrls();
+        renderPreview(assignment);
+      });
+
+      function setStatus(message, isError = false) {
+        rosterStatus.textContent = message;
+        rosterStatus.classList.toggle("error", isError);
+      }
+
+      function setReady(ready) {
+        submitBtn.disabled = !ready;
+        previewBtn.disabled = !ready;
+      }
+
+      function showFormError(message) {
+        formError.textContent = message;
+        formError.classList.add("visible");
+      }
+
+      function clearFormError() {
+        formError.textContent = "";
+        formError.classList.remove("visible");
+      }
+
+      function markFieldInvalid(field) {
+        field.classList.add("invalid");
+        field.setAttribute("aria-invalid", "true");
+      }
+
+      function clearFieldInvalid(field) {
+        field.classList.remove("invalid");
+        field.removeAttribute("aria-invalid");
+      }
+
+      function clearAllFieldInvalid() {
+        clearFieldInvalid(fileInput);
+        clearFieldInvalid(groupSetNameInput);
+        clearFieldInvalid(groupCountInput);
+        clearFieldInvalid(nameCategory);
+      }
+
+      function getCategoryMeta(category) {
+        switch (category) {
+          case "sports":
+            return {
+              max: SPORTS_GROUP_NAMES.length,
+              countLabel: String(SPORTS_GROUP_NAMES.length),
+              hint: `Uses one-word NFL/NBA nicknames (up to ${SPORTS_GROUP_NAMES.length}).`,
+            };
+          case "elements":
+            return {
+              max: ELEMENT_GROUP_NAMES.length,
+              countLabel: String(ELEMENT_GROUP_NAMES.length),
+              hint: `Uses chemical element names (up to ${ELEMENT_GROUP_NAMES.length}).`,
+            };
+          case "anagram":
+            return {
+              max: ANAGRAM_TERMS.length,
+              countLabel: String(ANAGRAM_TERMS.length),
+              hint: `Uses Group_1_${ANAGRAM_TERMS[0].anagram} … Group_${ANAGRAM_TERMS.length}_${ANAGRAM_TERMS[ANAGRAM_TERMS.length - 1].anagram} (up to ${ANAGRAM_TERMS.length}).`,
+            };
+          case "numbered":
+            return {
+              max: MAX_NUMBERED_GROUPS,
+              countLabel: "unlimited",
+              hint: "Uses Group_1 … Group_N (unlimited; cannot exceed student count).",
+            };
+          case "skeleton":
+          default:
+            return {
+              max: SKELETON_GROUP_NAMES.length,
+              countLabel: String(SKELETON_GROUP_NAMES.length),
+              hint: `Uses anatomy bone names (up to ${SKELETON_GROUP_NAMES.length}).`,
+            };
+        }
+      }
+
+      function updateCategoryOptionLabels() {
+        for (const option of nameCategory.options) {
+          const base = CATEGORY_LABELS[option.value] || option.textContent;
+          const meta = getCategoryMeta(option.value);
+          option.textContent = `${base} (${meta.countLabel})`;
+        }
+      }
+
+      function updateCategoryLimits() {
+        const meta = getCategoryMeta(nameCategory.value);
+        groupCountInput.max = String(meta.max);
+        categoryHint.textContent = meta.hint;
+        anagramListBtn.classList.toggle(
+          "hidden",
+          nameCategory.value !== "anagram"
+        );
+
+        const current = Number(groupCountInput.value);
+        if (Number.isFinite(current) && current > meta.max) {
+          groupCountInput.value = String(meta.max);
+        }
+      }
+
+      function buildAnagramListCsv() {
+        const lines = ["Number,Group,Anagram,Answer"];
+        ANAGRAM_TERMS.forEach((term, index) => {
+          const n = index + 1;
+          lines.push(
+            [
+              n,
+              `Group_${n}_${term.anagram}`,
+              term.anagram,
+              term.answer,
+            ]
+              .map(csvEscape)
+              .join(",")
+          );
+        });
+        return `${lines.join("\n")}\n`;
+      }
+
+      function buildGroupDescriptors(category, groupCount) {
+        if (category === "sports") {
+          return SPORTS_GROUP_NAMES.slice(0, groupCount).map((title, index) => ({
+            code: toGroupCode(title, index + 1),
+            title,
+            answer: null,
+          }));
+        }
+
+        if (category === "elements") {
+          return ELEMENT_GROUP_NAMES.slice(0, groupCount).map((title, index) => ({
+            code: toGroupCode(title, index + 1),
+            title,
+            answer: null,
+          }));
+        }
+
+        if (category === "anagram") {
+          return ANAGRAM_TERMS.slice(0, groupCount).map((term, index) => {
+            const n = index + 1;
+            const title = `Group_${n}_${term.anagram}`;
+            return {
+              code: title,
+              title,
+              answer: term.answer,
+            };
+          });
+        }
+
+        if (category === "numbered") {
+          return Array.from({ length: groupCount }, (_, index) => {
+            const title = `Group_${index + 1}`;
+            return { code: title, title, answer: null };
+          });
+        }
+
+        return SKELETON_GROUP_NAMES.slice(0, groupCount).map((title, index) => ({
+          code: toGroupCode(title, index + 1),
+          title,
+          answer: null,
+        }));
+      }
+
+      function normalizeGroupSetName(value) {
+        return String(value ?? "")
+          .trim()
+          .replace(/[\s\-]+/g, "_")
+          .replace(/_+/g, "_")
+          .replace(/^_+|_+$/g, "");
+      }
+
+      function isValidGroupSetName(value) {
+        return GROUP_SET_NAME_PATTERN.test(value);
+      }
+
+      function reportGroupSetNameValidity(value = groupSetNameInput.value) {
+        if (!value) {
+          groupSetNameInput.setCustomValidity("Enter a group set name.");
+          return false;
+        }
+        if (!isValidGroupSetName(value)) {
+          groupSetNameInput.setCustomValidity(GROUP_SET_NAME_ERROR);
+          return false;
+        }
+        groupSetNameInput.setCustomValidity("");
+        return true;
+      }
+
+      function buildAssignment() {
+        clearFormError();
+        clearAllFieldInvalid();
+
+        if (students.length === 0) {
+          const message = "Upload a gradebook CSV first.";
+          markFieldInvalid(fileInput);
+          setStatus(message, true);
+          showFormError(message);
+          return null;
+        }
+
+        const category = nameCategory.value;
+        const meta = getCategoryMeta(category);
+        const groupCount = Number(document.getElementById("group-count").value);
+        const groupSetName = normalizeGroupSetName(groupSetNameInput.value);
+        groupSetNameInput.value = groupSetName;
+        const sortMode = document.getElementById("sort-mode").value;
+        const selfEnroll = document.getElementById("self-enroll").value;
+        const description = document
+          .getElementById("group-description")
+          .value.trim();
+
+        if (!groupSetName) {
+          const message = "Enter a group set name.";
+          reportGroupSetNameValidity("");
+          markFieldInvalid(groupSetNameInput);
+          groupSetNameInput.reportValidity();
+          setStatus(message, true);
+          showFormError(message);
+          return null;
+        }
+
+        if (!isValidGroupSetName(groupSetName)) {
+          reportGroupSetNameValidity(groupSetName);
+          markFieldInvalid(groupSetNameInput);
+          groupSetNameInput.reportValidity();
+          setStatus(GROUP_SET_NAME_ERROR, true);
+          showFormError(GROUP_SET_NAME_ERROR);
+          return null;
+        }
+
+        reportGroupSetNameValidity(groupSetName);
+
+        if (!Number.isInteger(groupCount) || groupCount < 1) {
+          const message = "Number of groups must be at least 1.";
+          markFieldInvalid(groupCountInput);
+          setStatus(message, true);
+          showFormError(message);
+          return null;
+        }
+
+        if (groupCount > meta.max) {
+          const message = `Choose ${meta.max} groups or fewer for this category.`;
+          markFieldInvalid(groupCountInput);
+          setStatus(message, true);
+          showFormError(message);
+          return null;
+        }
+
+        if (groupCount > students.length) {
+          const message =
+            "Number of groups cannot exceed the number of students.";
+          markFieldInvalid(groupCountInput);
+          setStatus(message, true);
+          showFormError(message);
+          return null;
+        }
+
+        const ordered = orderStudents(students, sortMode);
+        const descriptors = buildGroupDescriptors(category, groupCount);
+        const groups = descriptors.map((descriptor) => ({
+          code: descriptor.code,
+          title: descriptor.title,
+          answer: descriptor.answer,
+          description:
+            description ||
+            (descriptor.answer
+              ? `Anagram group (${descriptor.answer})`
+              : `Assigned group: ${descriptor.title}`),
+          members: [],
+        }));
+
+        ordered.forEach((student, index) => {
+          groups[index % groupCount].members.push(student);
+        });
+
+        return {
+          groupSetName,
+          selfEnroll,
+          groups,
+          sortMode,
+          category,
+          studentCount: ordered.length,
+        };
+      }
+
+      function orderStudents(list, sortMode) {
+        const copy = [...list];
+        if (sortMode === "random") {
+          for (let i = copy.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+          }
+          return copy;
+        }
+
+        return copy.sort((a, b) => {
+          const last = a.lastName.localeCompare(b.lastName, undefined, {
+            sensitivity: "base",
+          });
+          if (last !== 0) return last;
+          return a.firstName.localeCompare(b.firstName, undefined, {
+            sensitivity: "base",
+          });
+        });
+      }
+
+      function toGroupCode(title, index) {
+        const cleaned = title.replace(/[^A-Za-z0-9]+/g, "_");
+        return `Group_${cleaned || index}`;
+      }
+
+      function parseGradebookCsv(text) {
+        const normalized = text.replace(/^\uFEFF/, "");
+        const rows = parseCsv(normalized);
+        if (rows.length < 2) {
+          throw new Error("CSV needs a header row and at least one student.");
+        }
+
+        const headers = rows[0].map((header) =>
+          header.trim().replace(/^"|"$/g, "")
+        );
+        const index = {
+          lastName: findHeaderIndex(headers, ["Last Name"]),
+          firstName: findHeaderIndex(headers, ["First Name"]),
+          username: findHeaderIndex(headers, ["Username", "User Name"]),
+          studentId: findHeaderIndex(headers, ["Student ID", "Student Id"]),
+        };
+
+        if (index.lastName < 0 || index.firstName < 0 || index.username < 0) {
+          throw new Error(
+            'Expected Blackboard columns: "Last Name", "First Name", and "Username".'
+          );
+        }
+
+        return rows
+          .slice(1)
+          .filter((row) => row.some((cell) => cell.trim() !== ""))
+          .map((row) => ({
+            lastName: cleanCell(row[index.lastName]),
+            firstName: cleanCell(row[index.firstName]),
+            username: cleanCell(row[index.username]),
+            studentId:
+              index.studentId >= 0 ? cleanCell(row[index.studentId]) : "",
+          }))
+          .filter((student) => student.username);
+      }
+
+      function findHeaderIndex(headers, candidates) {
+        return headers.findIndex((header) =>
+          candidates.some(
+            (candidate) => header.toLowerCase() === candidate.toLowerCase()
+          )
+        );
+      }
+
+      function cleanCell(value) {
+        return String(value ?? "")
+          .trim()
+          .replace(/^"|"$/g, "");
+      }
+
+      function parseCsv(text) {
+        const rows = [];
+        let row = [];
+        let cell = "";
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i += 1) {
+          const char = text[i];
+          const next = text[i + 1];
+
+          if (inQuotes) {
+            if (char === '"' && next === '"') {
+              cell += '"';
+              i += 1;
+            } else if (char === '"') {
+              inQuotes = false;
+            } else {
+              cell += char;
+            }
+            continue;
+          }
+
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === ",") {
+            row.push(cell);
+            cell = "";
+          } else if (char === "\n") {
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = "";
+          } else if (char === "\r") {
+            // ignore CR; handle CRLF via the following LF
+          } else {
+            cell += char;
+          }
+        }
+
+        if (cell.length > 0 || row.length > 0) {
+          row.push(cell);
+          rows.push(row);
+        }
+
+        return rows;
+      }
+
+      function csvEscape(value) {
+        const text = String(value ?? "");
+        if (/[",\n\r]/.test(text)) {
+          return `"${text.replace(/"/g, '""')}"`;
+        }
+        return text;
+      }
+
+      function buildGroupsCsv(assignment) {
+        const lines = ["Group Code*,Title*,Description,Group Set*,Self Enroll*"];
+        for (const group of assignment.groups) {
+          lines.push(
+            [
+              group.code,
+              group.title,
+              group.description,
+              assignment.groupSetName,
+              assignment.selfEnroll,
+            ]
+              .map(csvEscape)
+              .join(",")
+          );
+        }
+        return `${lines.join("\n")}\n`;
+      }
+
+      function buildGroupMembersCsv(assignment) {
+        const lines = [
+          "Group Code*,User Name*,Student Id,First Name,Last Name,Group Set",
+        ];
+        for (const group of assignment.groups) {
+          for (const member of group.members) {
+            lines.push(
+              [
+                group.code,
+                member.username,
+                member.studentId,
+                member.firstName,
+                member.lastName,
+                assignment.groupSetName,
+              ]
+                .map(csvEscape)
+                .join(",")
+            );
+          }
+        }
+        return `${lines.join("\n")}\n`;
+      }
+
+      function renderPreview(assignment) {
+        previewSection.classList.remove("hidden");
+        const orderLabel =
+          assignment.sortMode === "random"
+            ? "random order"
+            : "A–Z by last name";
+        previewSummary.textContent = `${assignment.studentCount} students → ${assignment.groups.length} groups (${orderLabel}) in set “${assignment.groupSetName}”.`;
+
+        previewGroups.innerHTML = "";
+        for (const group of assignment.groups) {
+          const card = document.createElement("article");
+          card.className = "group-card";
+
+          const title = document.createElement("h3");
+          title.textContent = group.title;
+
+          const meta = document.createElement("p");
+          meta.className = "meta";
+          const membersLabel = document.createElement("span");
+          membersLabel.className = "meta-label-members";
+          membersLabel.textContent = "Members:";
+          meta.append(membersLabel, ` ${group.members.length}`);
+          if (group.answer) {
+            const anagramLabel = document.createElement("span");
+            anagramLabel.className = "meta-label-anagram";
+            anagramLabel.textContent = "Anagram:";
+            meta.append(" · ", anagramLabel, ` ${group.answer}`);
+          }
+
+          const list = document.createElement("ol");
+          for (const member of group.members) {
+            const item = document.createElement("li");
+            const idPart = member.studentId || "—";
+            item.textContent = `${member.lastName}, ${member.firstName} (${member.username} - ${idPart})`;
+            list.appendChild(item);
+          }
+
+          card.append(title, meta, list);
+          previewGroups.appendChild(card);
+        }
+      }
+
+      function wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function revokeObjectUrls() {
+        for (const url of objectUrls) {
+          URL.revokeObjectURL(url);
+        }
+        objectUrls = [];
+      }
+
+      function createObjectUrl(contents) {
+        const blob = new Blob([contents], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        objectUrls.push(url);
+        return url;
+      }
+
+      function showDownloadLinks(files) {
+        revokeObjectUrls();
+        downloadLinks.innerHTML = "";
+        downloadLinks.classList.remove("hidden");
+
+        files.forEach((file, index) => {
+          const link = document.createElement("a");
+          link.href = createObjectUrl(file.contents);
+          link.download = file.filename;
+          link.textContent = `Download ${file.filename}`;
+          if (index > 0) link.className = "secondary";
+          downloadLinks.appendChild(link);
+        });
+      }
+
+      async function downloadText(filename, contents) {
+        const url = createObjectUrl(contents);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        await wait(50);
+      }
+    </script>
+  </body>
+</html>
