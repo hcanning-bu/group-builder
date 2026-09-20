@@ -462,15 +462,15 @@
               type="text"
               value="Group_Set_1"
               required
-              pattern="[A-Za-z0-9]+(_[A-Za-z0-9]+)+"
-              title="Use underscores between words (e.g. Group_Set_1 or group1_set). Letters, numbers, and underscores only; no spaces."
+              pattern="[A-Za-z0-9]+(_[A-Za-z0-9]+)*"
+              title="Single words are fine (e.g. Group1). Multiple words must use underscores (e.g. Group_Set_1). Letters, numbers, and underscores only; no spaces."
               spellcheck="false"
               autocomplete="off"
             />
           </label>
           <p id="group-set-hint" class="hint">
-            Use underscores between words (e.g. <code>Group_Set_1</code>,
-            <code>group1_set</code>). No spaces.
+            Single words are fine (e.g. <code>Group1</code>). Multiple words
+            must use underscores (e.g. <code>Group_Set_1</code>). No spaces.
           </p>
           <button type="button" id="group-set-fix-btn" class="fix-btn hidden"></button>
 
@@ -839,9 +839,9 @@
         numbered: "Numbered",
       };
 
-      const GROUP_SET_NAME_PATTERN = /^[A-Za-z0-9]+(_[A-Za-z0-9]+)+$/;
+      const GROUP_SET_NAME_PATTERN = /^[A-Za-z0-9]+(_[A-Za-z0-9]+)*$/;
       const GROUP_SET_NAME_ERROR =
-        "Group set name must use underscores between words (e.g. Group_Set_1 or group1_set). Letters, numbers, and underscores only; no spaces.";
+        "Single words are fine (e.g. Group1). Multiple words must use underscores (e.g. Group_Set_1 or group1_set). Letters, numbers, and underscores only; no spaces.";
 
       const form = document.getElementById("group-form");
       const fileInput = document.getElementById("csv-file");
@@ -878,10 +878,18 @@
       });
 
       groupSetNameInput.addEventListener("input", () => {
+        const value = groupSetNameInput.value;
         groupSetNameInput.setCustomValidity("");
         clearFieldInvalid(groupSetNameInput);
-        clearFormError();
-        hideGroupSetNameFix();
+        if (isValidGroupSetName(value)) {
+          hideGroupSetNameFix();
+          return;
+        }
+        if (value) {
+          offerGroupSetNameFix(value);
+        } else {
+          hideGroupSetNameFix();
+        }
       });
 
       groupSetFixBtn.addEventListener("click", () => {
@@ -1138,15 +1146,16 @@
       }
 
       function isValidGroupSetName(value) {
-        return GROUP_SET_NAME_PATTERN.test(value);
+        return GROUP_SET_NAME_PATTERN.test(String(value ?? "").trim());
       }
 
       function reportGroupSetNameValidity(value = groupSetNameInput.value) {
-        if (!value) {
+        const trimmed = String(value ?? "").trim();
+        if (!trimmed) {
           groupSetNameInput.setCustomValidity("Enter a group set name.");
           return false;
         }
-        if (!isValidGroupSetName(value)) {
+        if (!isValidGroupSetName(trimmed)) {
           groupSetNameInput.setCustomValidity(GROUP_SET_NAME_ERROR);
           return false;
         }
@@ -1155,14 +1164,15 @@
       }
 
       function validateGroupSetNameField() {
-        const value = groupSetNameInput.value;
+        const value = groupSetNameInput.value.trim();
+        if (groupSetNameInput.value !== value) {
+          groupSetNameInput.value = value;
+        }
         const ok = reportGroupSetNameValidity(value);
         groupSetNameInput.classList.toggle("invalid", !ok && Boolean(value));
         if (!ok && value) {
-          showFormError(GROUP_SET_NAME_ERROR);
           offerGroupSetNameFix(value);
         } else {
-          clearFormError();
           hideGroupSetNameFix();
         }
         return ok;
@@ -1200,7 +1210,8 @@
         const category = nameCategory.value;
         const meta = getCategoryMeta(category);
         const groupCount = Number(document.getElementById("group-count").value);
-        const groupSetName = groupSetNameInput.value;
+        const groupSetName = groupSetNameInput.value.trim();
+        groupSetNameInput.value = groupSetName;
         const sortMode = document.getElementById("sort-mode").value;
         const selfEnroll = document.getElementById("self-enroll").value;
         const description = document
@@ -1208,12 +1219,9 @@
           .value.trim();
 
         if (!groupSetName) {
-          const message = "Enter a group set name.";
           reportGroupSetNameValidity("");
           markFieldInvalid(groupSetNameInput);
           groupSetNameInput.reportValidity();
-          setStatus(message, true);
-          showFormError(message);
           return null;
         }
 
@@ -1221,8 +1229,6 @@
           reportGroupSetNameValidity(groupSetName);
           markFieldInvalid(groupSetNameInput);
           groupSetNameInput.reportValidity();
-          setStatus(GROUP_SET_NAME_ERROR, true);
-          showFormError(GROUP_SET_NAME_ERROR);
           offerGroupSetNameFix(groupSetName);
           return null;
         }
